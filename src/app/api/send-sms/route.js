@@ -3,86 +3,72 @@ import { spawn } from 'child_process';
 import sharp from 'sharp';
 
 function startFileServer(imageBuffer, port = 3001) {
-  return new Promise((resolve, reject) => {
-    const server = createServer((req, res) => {
-      if (req.url === '/image.jpg') {
-        res.writeHead(200, {
-          'Content-Type': 'image/jpeg',
-          'Content-Length': imageBuffer.length,
-          'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'no-cache'
+    return new Promise((resolve, reject) => {
+        const server = createServer((req, res) => {
+            if (req.url === '/image.jpg') {
+                res.writeHead(200, {
+                'Content-Type': 'image/jpeg',
+                'Content-Length': imageBuffer.length,
+                'Access-Control-Allow-Origin': '*',
+                'Cache-Control': 'no-cache'
+                });
+                res.end(imageBuffer);
+            } else {
+                res.writeHead(404);
+                res.end('Not found');
+            }
         });
-        res.end(imageBuffer);
-      } else {
-        res.writeHead(404);
-        res.end('Not found');
-      }
-    });
 
-    server.listen(port, '0.0.0.0', () => {
-      console.log(`Temp server listening on 0.0.0.0:${port}`);
-      resolve(server);
-    });
+        server.listen(port, '0.0.0.0', () => {
+            console.log(`Temp server listening on 0.0.0.0:${port}`);
+            resolve(server);
+        });
 
-    server.on('error', reject);
-  });
+        server.on('error', reject);
+    });
 }
 
 function startNgrok(port) {
-  return new Promise((resolve, reject) => {
-    const ngrok = spawn('ngrok', ['http', port.toString()]);
-    
-    let publicUrl = '';
-    let attempts = 0;
-    const maxAttempts = 30;
-    
-    const checkInterval = setInterval(() => {
-      attempts++;
-      fetch(`http://localhost:4040/api/tunnels`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.tunnels && data.tunnels.length > 0) {
-            const httpsTunnel = data.tunnels.find(t => t.proto === 'https');
-            if (httpsTunnel) {
-              publicUrl = httpsTunnel.public_url;
-              clearInterval(checkInterval);
-              resolve({ ngrok, publicUrl });
+    return new Promise((resolve, reject) => {
+        const ngrok = spawn('ngrok', ['http', port.toString()]);
+        let publicUrl = '';
+        
+        const checkInterval = setInterval(() => {
+            fetch(`http://localhost:4040/api/tunnels`)
+            .then(response => response.json())
+            .then(data => {
+            if (data.tunnels && data.tunnels.length > 0) {
+                const httpsTunnel = data.tunnels.find(t => t.proto === 'https');
+                if (httpsTunnel) {
+                publicUrl = httpsTunnel.public_url;
+                clearInterval(checkInterval);
+                resolve({ ngrok, publicUrl });
+                }
             }
-          }
-        })
-        .catch(() => {
+            })
+            .catch(() => {
+            });
+        
+        }, 1000);
+        ngrok.stderr.on('data', (data) => {
+        console.error('ngrok error:', data.toString());
         });
-      
-      if (attempts >= maxAttempts) {
-        clearInterval(checkInterval);
-        reject(new Error('ngrok timeout - could not establish tunnel'));
-      }
-    }, 1000);
-    
-    ngrok.stderr.on('data', (data) => {
-      console.error('ngrok error:', data.toString());
     });
-  });
 }
 
 export async function POST(request) {
     let tempServer = null;
     let ngrokProcess = null;
-    
     try {
         const { phoneNumber, message, imageData } = await request.json();
-        
-        if (!phoneNumber) {
-        return Response.json({ error: 'Phone number is required' }, { status: 400 });
-        }
-
         let smsMessage = message || 'Check out my drawing!';
         let mediaUrl = null;
         const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
         let imageBuffer = Buffer.from(base64Data, 'base64');
+
         try {
             imageBuffer = await sharp(imageBuffer)
-            .jpeg({ quality: 85 })
+            .jpeg({ quality: 100 })
             .toBuffer();
             console.log('Image converted to JPEG');
         } catch (conversionError) {
@@ -109,11 +95,10 @@ export async function POST(request) {
 
         const cdnResult = await cdnResponse.json();
         mediaUrl = cdnResult.files[0].deployedUrl;
-        
         const clicksendResponse = await fetch('https://rest.clicksend.com/v3/mms/send', {
         method: 'POST',
         headers: {
-            'Authorization': `Basic ${Buffer.from('normal.emma.brown@gmail.com:AD438B1C-C8E5-5B90-8703-2DFA3761D8F1').toString('base64')}`,
+            'Authorization': `Basic ${Buffer.from(`${process.env.CLICKSEND_USERNAME}:${process.env.CLICKSEND_API_KEY}`).toString('base64')}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({

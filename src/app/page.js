@@ -12,7 +12,8 @@ export default function SketchPad() {
   const [history, setHistory] = useState([]);
   const [historyIndex, setIndex] = useState(-1);
   const [phoneNumber, setPhoneNumber] = useState('');
-
+  const [message, setMessage] = useState('Check out my drawing!');
+  
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -120,25 +121,19 @@ export default function SketchPad() {
 
     const canvas = canvasRef.current;
     const imageData = canvas.toDataURL('image/png');
-    
     try {
       const response = await fetch('/api/send-sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phoneNumber,
-          message: 'Check out my drawing!',
+          message: message,
           imageData: imageData
         })
       });
-      
       const result = await response.json();
       if (result.success) {
-        if (result.mediaUrl) {
-          alert(`Drawing sent successfully! Image uploaded to: ${result.mediaUrl}`);
-        } else {
-          alert('Drawing sent successfully!');
-        }
+        alert(`Drawing sent successfully! Image uploaded to: ${result.mediaUrl}`);
       } else {
         alert('Failed to send drawing');
       }
@@ -187,6 +182,15 @@ export default function SketchPad() {
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               className={styles.phoneInput}
+            />
+          </div>
+          <div className={styles.controlGroup}>
+            <label>Message:</label>
+            <input
+              type="text"
+              placeholder="Check out my drawing!"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
             />
           </div>
           <button onClick={shareDrawingViaSMS} className={styles.sendButton}>
