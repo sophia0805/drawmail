@@ -1,13 +1,7 @@
-import twilio from 'twilio';
 import { createServer } from 'http';
 import { spawn } from 'child_process';
 
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
-
-function startTempFileServer(imageBuffer, port = 3001) {
+function startFileServer(imageBuffer, port = 3001) {
   return new Promise((resolve, reject) => {
     const server = createServer((req, res) => {
       if (req.url === '/image.png') {
@@ -69,7 +63,6 @@ function startNgrok(port) {
     });
   });
 }
-
 export async function POST(request) {
   let tempServer = null;
   let ngrokProcess = null;
@@ -88,15 +81,9 @@ export async function POST(request) {
       try {
         const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
         const imageBuffer = Buffer.from(base64Data, 'base64');
-        tempServer = await startTempFileServer(imageBuffer, 3001);
+        tempServer = await startFileServer(imageBuffer, 3001);
         console.log('Temp server started on port 3001');
         
-        try {
-          const localTest = await fetch('http://localhost:3001/image.png');
-          console.log('✅ Local server test successful:', localTest.status);
-        } catch (localError) {
-          console.log('❌ Local server test failed:', localError.message);
-        }
         const { ngrok, publicUrl: ngrokUrl } = await startNgrok(3001);
         ngrokProcess = ngrok;
         console.log('ngrok URL:', ngrokUrl);
@@ -111,13 +98,7 @@ export async function POST(request) {
           body: JSON.stringify([`${ngrokUrl}/image.png`])
         });
 
-        if (!cdnResponse.ok) {
-          const errorText = await cdnResponse.text();
-          throw new Error(`CDN upload failed: ${cdnResponse.status} - ${errorText}`);
-        }
-
         const cdnResult = await cdnResponse.json();
-        console.log('CDN response:', cdnResult);
         
         if (cdnResult.files && cdnResult.files.length > 0) {
           mediaUrl = cdnResult.files[0].deployedUrl;
@@ -125,17 +106,80 @@ export async function POST(request) {
           console.log('Image uploaded to CDN:', mediaUrl);
         }
         
+        const convertResponse = await fetch('https://rest.clicksend.com/v3/uploads?convert=mms', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Basic ${Buffer.from('normal.emma.brown@gmail.com:AD438B1C-C8E5-5B90-8703-2DFA3761D8F1').toString('base64')}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              file_url: mediaUrl  // Use the CDN URL instead of base64 data
+            })
+          });
+        
+          if (convertResponse.ok) {
+            const convertResult = await convertResponse.json();
+            mediaUrl = convertResult.data.url; // Use the converted image URL
+            console.log('Image converted by ClickSend:', mediaUrl);
+          } else {
+            console.error('ClickSend conversion failed:', convertResponse.status);
+          }
       } catch (error) {
         console.error('CDN upload error:', error);
       }
     }
 
-
-    return Response.json({ 
-      success: true, 
-      message: 'ngrok tunnel test completed',
-      mediaUrl: mediaUrl || null
+    const clicksendResponse = await fetch('https://rest.clicksend.com/v3/mms/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${Buffer.from('normal.emma.brown@gmail.com:AD438B1C-C8E5-5B90-8703-2DFA3761D8F1').toString('base64')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          media_file: mediaUrl,
+          messages: [{
+            source: "sketch-pad",
+            subject: "Check out my drawing!",
+            from: "SketchPad",
+            body: smsMessage,
+            to: phoneNumber,
+            country: "US" // You might want to detect this dynamically
+          }]
+        })
     });
+
+    // Check if the SMS request was successful
+    if (!clicksendResponse.ok) {
+      const errorText = await clicksendResponse.text();
+      console.error('ClickSend API error:', clicksendResponse.status, errorText);
+      return Response.json({ 
+        error: `SMS failed: ${clicksendResponse.status} - ${errorText}` 
+      }, { status: clicksendResponse.status });
+    }
+
+    const clicksendResult = await clicksendResponse.json();
+    console.log('ClickSend response:', clicksendResult);
+
+    // Check if ClickSend accepted the message
+    if (clicksendResult.data && clicksendResult.data.messages) {
+      const messageStatus = clicksendResult.data.messages[0];
+      if (messageStatus.status === 'SUCCESS') {
+        return Response.json({ 
+          success: true, 
+          message: 'SMS sent successfully',
+          messageId: messageStatus.message_id,
+          mediaUrl: mediaUrl
+        });
+      } else {
+        return Response.json({ 
+          error: `SMS failed: ${messageStatus.status} - ${messageStatus.error_text || 'Unknown error'}` 
+        }, { status: 400 });
+      }
+    } else {
+      return Response.json({ 
+        error: 'Unexpected response format from ClickSend' 
+      }, { status: 500 });
+    }
 
   } catch (error) {
     console.error('API error:', error);
