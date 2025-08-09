@@ -1,64 +1,6 @@
-import { createServer } from 'http';
-import { spawn } from 'child_process';
 import sharp from 'sharp';
 
-function startFileServer(imageBuffer, port = 3001) {
-    return new Promise((resolve, reject) => {
-        const server = createServer((req, res) => {
-            if (req.url === '/image.jpg') {
-                res.writeHead(200, {
-                'Content-Type': 'image/jpeg',
-                'Content-Length': imageBuffer.length,
-                'Access-Control-Allow-Origin': '*',
-                'Cache-Control': 'no-cache'
-                });
-                res.end(imageBuffer);
-            } else {
-                res.writeHead(404);
-                res.end('Not found');
-            }
-        });
-
-        server.listen(port, '0.0.0.0', () => {
-            console.log(`Temp server listening on 0.0.0.0:${port}`);
-            resolve(server);
-        });
-
-        server.on('error', reject);
-    });
-}
-
-function startNgrok(port) {
-    return new Promise((resolve, reject) => {
-        const ngrok = spawn('ngrok', ['http', port.toString()]);
-        let publicUrl = '';
-        
-        const checkInterval = setInterval(() => {
-            fetch(`http://localhost:4040/api/tunnels`)
-            .then(response => response.json())
-            .then(data => {
-            if (data.tunnels && data.tunnels.length > 0) {
-                const httpsTunnel = data.tunnels.find(t => t.proto === 'https');
-                if (httpsTunnel) {
-                publicUrl = httpsTunnel.public_url;
-                clearInterval(checkInterval);
-                resolve({ ngrok, publicUrl });
-                }
-            }
-            })
-            .catch(() => {
-            });
-        
-        }, 1000);
-        ngrok.stderr.on('data', (data) => {
-        console.error('ngrok error:', data.toString());
-        });
-    });
-}
-
 export async function POST(request) {
-    let tempServer = null;
-    let ngrokProcess = null;
     try {
         const { phoneNumber, message, imageData } = await request.json();
         let smsMessage = message || 'Check out my drawing!';
@@ -75,26 +17,26 @@ export async function POST(request) {
             console.error('Image conversion failed:', conversionError);
             return Response.json({ error: 'Image conversion failed' }, { status: 400 });
         }
-            
-        tempServer = await startFileServer(imageBuffer, 3001);
-        console.log('Temp server started on port 3001');
-        const { ngrok, publicUrl: ngrokUrl } = await startNgrok(3001);
-        ngrokProcess = ngrok;
-
-        console.log('ngrok URL:', ngrokUrl, "\tFull image URL:", `${ngrokUrl}/image.jpg`);
-        
-        await new Promise(resolve => setTimeout(resolve, 5000));
-        const cdnResponse = await fetch('https://cdn.hackclub.com/api/v3/new', {
+        const convertResponse = await fetch('https://rest.clicksend.com/v3/uploads?convert=mms', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer beans',
+                'Authorization': `Basic ${Buffer.from(`${process.env.CLICKSEND_USERNAME}:${process.env.CLICKSEND_API_KEY}`).toString('base64')}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify([`${ngrokUrl}/image.jpg`])
+            body: JSON.stringify({
+                file: imageBuffer.toString('base64'),
+                filename: 'drawing.jpg'
+            })
         });
-
-        const cdnResult = await cdnResponse.json();
-        mediaUrl = cdnResult.files[0].deployedUrl;
+        
+        if (convertResponse.ok) {
+            const convertResult = await convertResponse.json();
+            mediaUrl = convertResult.data.url;
+            console.log('Image uploaded to ClickSend:', mediaUrl);
+        } else {
+            console.error('ClickSend upload failed:', convertResponse.status);
+            return Response.json({ error: 'Image upload failed' }, { status: 400 });
+        }
         const clicksendResponse = await fetch('https://rest.clicksend.com/v3/mms/send', {
         method: 'POST',
         headers: {
@@ -134,12 +76,5 @@ export async function POST(request) {
         return Response.json({ 
         error: error.message || 'Failed to process request' 
         }, { status: 500 });
-    } finally {
-        if (ngrokProcess) {
-        ngrokProcess.kill();
-        }
-        if (tempServer) {
-        tempServer.close();
-        }
     }
 }
