@@ -11,6 +11,7 @@ export default function SketchPad() {
   const [context, setContext] = useState(null);
   const [history, setHistory] = useState([]);
   const [historyIndex, setIndex] = useState(-1);
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -111,6 +112,42 @@ export default function SketchPad() {
     link.click();
   };
 
+  const shareDrawingViaSMS = async () => {
+    if (!phoneNumber) {
+      alert('Please enter a phone number');
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    const imageData = canvas.toDataURL('image/png');
+    
+    try {
+      const response = await fetch('/api/send-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phoneNumber,
+          message: 'Check out my drawing!',
+          imageData: imageData
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        if (result.mediaUrl) {
+          alert(`Drawing sent successfully! Image uploaded to: ${result.mediaUrl}`);
+        } else {
+          alert('Drawing sent successfully!');
+        }
+      } else {
+        alert('Failed to send drawing');
+      }
+    } catch (error) {
+      console.error('Failed to send drawing:', error);
+      alert('Failed to send drawing');
+    }
+  };
+
   return (
     <div className={styles.sketchPad}>
       <div className={styles.sidebar}>
@@ -142,6 +179,19 @@ export default function SketchPad() {
             <button onClick={undo} className={styles.undoButton} disabled={historyIndex <= 0} >←</button>
             <button onClick={redo} className={styles.redoButton} disabled={historyIndex >= history.length - 1}>→</button>
           </div>
+          <div className={styles.controlGroup}>
+            <label>Phone Number:</label>
+            <input
+              type="tel"
+              placeholder="+1234567890"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className={styles.phoneInput}
+            />
+          </div>
+          <button onClick={shareDrawingViaSMS} className={styles.sendButton}>
+            Send Drawing
+          </button>
           <button onClick={clearCanvas} className={styles.clearButton}>
             Clear
           </button>
