@@ -6,34 +6,23 @@ const client = telnyx(process.env.TELYNXKEY);
 export async function POST(request) {
   try {
     const { phoneNumber, message, imageData } = await request.json();
-
-    let smsMessage = message || 'Check out my drawing!';
     let mediaUrl = null;
     if (imageData) {
         try {
-            console.log('Image data received, length:', imageData.length);
-            
-            const formData = new FormData();
-            formData.append("image", imageData, 'drawing.png');
-            console.log('Raw imageData:', imageData.substring(0, 100) + '...');
-            console.log('Base64 data length:', base64Data.length);
-            console.log('FormData entries:');
-            for (let [key, value] of formData.entries()) {
-                console.log(key, typeof value, value.length || 'N/A');
-            }
+            const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
+            const params = new URLSearchParams();
+            params.append('image', base64Data);
             const imgbbResponse = await fetch(`https://api.imgbb.com/1/upload?key=${process.env.IMGBBKEY}`, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: params
             });
-            
-            if (imgbbResponse.ok) {
-                const imgbbResult = await imgbbResponse.json();
-                mediaUrl = imgbbResult.data.url;
-                console.log('Image uploaded to ImgBB:', mediaUrl);
-            } else {
-                const errorText = await imgbbResponse.text();
-                console.error('ImgBB upload failed:', imgbbResponse.status, errorText);
-            }
+
+            const imgbbResult = await imgbbResponse.json();
+            mediaUrl = imgbbResult.data.url;
+            console.log('Image uploaded to ImgBB:', mediaUrl);
         } catch (error) {
             console.error('ImgBB upload error:', error);
         }
