@@ -13,7 +13,8 @@ export default function SketchPad() {
   const [historyIndex, setIndex] = useState(-1);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [message, setMessage] = useState('Check out my drawing!');
-  
+  const [name, setName] = useState('- Anonymous');
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -127,7 +128,7 @@ export default function SketchPad() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phoneNumber,
-          message: message,
+          message: message + " " + name,
           imageData: imageData
         })
       });
@@ -191,6 +192,13 @@ export default function SketchPad() {
               placeholder="Check out my drawing!"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+            />
+            <label>From:</label>
+            <input
+              type="text"
+              placeholder="- Anonymous"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
           <button onClick={shareDrawingViaSMS} className={styles.sendButton}>

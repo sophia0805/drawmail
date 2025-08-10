@@ -34,7 +34,7 @@ export async function POST(request) {
         channel: "mms",
         "image": {
             "url": mediaUrl,
-            "caption": "Additional text to accompany the image."
+            "caption": "drawing"
         }
     };
 
