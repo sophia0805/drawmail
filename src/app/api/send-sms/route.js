@@ -26,6 +26,8 @@ export async function POST(request) {
         }
     }
 
+    console.log(phoneNumber.replace(/^\+/, ''), message, mediaUrl)
+
     const messageData = {
         message_type: "text",
         text: message || 'Check out my drawing!',
