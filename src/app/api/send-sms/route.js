@@ -1,98 +1,80 @@
-import sharp from 'sharp';
+import telnyx from 'telnyx';
+import FormData from 'form-data';
+
+const client = telnyx(process.env.TELYNXKEY);
 
 export async function POST(request) {
-    try {
-        const { phoneNumber, message, imageData } = await request.json();
-        let smsMessage = message || 'Check out my drawing!';
-        let mediaUrl = null;
+  try {
+    const { phoneNumber, message, imageData } = await request.json();
 
-        if (imageData) {
-            try {
-                const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
-                let imageBuffer = Buffer.from(base64Data, 'base64');
-                imageBuffer = await sharp(imageBuffer)
-                    .jpeg({ quality: 100 })
-                    .toBuffer();
-                console.log('Image converted to JPEG');
-
-                const convertResponse = await fetch('https://rest.clicksend.com/v3/uploads?convert=mms', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Basic ${Buffer.from(`${process.env.CLICKSEND_USERNAME}:${process.env.CLICKSEND_API_KEY}`).toString('base64')}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        file: imageBuffer.toString('base64'),
-                        filename: 'drawing.jpg'
-                    })
-                });
-
-                if (!convertResponse.ok) {
-                    const errorText = await convertResponse.text();
-                    console.error('ClickSend upload failed:', convertResponse.status, errorText);
-                    return Response.json({ error: `Image upload failed: ${errorText}` }, { status: 400 });
-                }
-
-                const convertResult = await convertResponse.json();
-                mediaUrl = convertResult.data.url;
-                console.log('Image uploaded to ClickSend:', mediaUrl);
-                
-            } catch (error) {
-                console.error('Image processing error:', error);
-                return Response.json({ error: 'Image processing failed' }, { status: 400 });
+    let smsMessage = message || 'Check out my drawing!';
+    let mediaUrl = null;
+    if (imageData) {
+        try {
+            console.log('Image data received, length:', imageData.length);
+            
+            const formData = new FormData();
+            formData.append("image", imageData, 'drawing.png');
+            console.log('Raw imageData:', imageData.substring(0, 100) + '...');
+            console.log('Base64 data length:', base64Data.length);
+            console.log('FormData entries:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key, typeof value, value.length || 'N/A');
             }
-        }
-        const clicksendResponse = await fetch('https://rest.clicksend.com/v3/mms/send', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Basic ${Buffer.from(`${process.env.CLICKSEND_USERNAME}:${process.env.CLICKSEND_API_KEY}`).toString('base64')}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                media_file: mediaUrl,
-                messages: [{
-                    source: "sketch-pad",
-                    subject: "Check out my drawing!",
-                    from: "SketchPad",
-                    body: smsMessage,
-                    to: phoneNumber,
-                    country: "US"
-                }]
-            })
-        });
-
-        if (!clicksendResponse.ok) {
-            const errorText = await clicksendResponse.text();
-            console.error('ClickSend SMS failed:', clicksendResponse.status, errorText);
-            return Response.json({ error: `SMS failed: ${errorText}` }, { status: clicksendResponse.status });
-        }
-
-        const clicksendResult = await clicksendResponse.json();
-        
-        if (clicksendResult.data && clicksendResult.data.messages) {
-            const messageStatus = clicksendResult.data.messages[0];
-            if (messageStatus.status === 'SUCCESS') {
-                return Response.json({ 
-                    success: true, 
-                    message: 'Message sent successfully!',
-                    messageId: messageStatus.message_id,
-                    mediaUrl: mediaUrl
-                });
+            const imgbbResponse = await fetch(`https://api.imgbb.com/1/upload?key=${process.env.IMGBBKEY}`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (imgbbResponse.ok) {
+                const imgbbResult = await imgbbResponse.json();
+                mediaUrl = imgbbResult.data.url;
+                console.log('Image uploaded to ImgBB:', mediaUrl);
             } else {
-                return Response.json({ 
-                    error: `MMS failed: ${messageStatus.status} - ${messageStatus.error_text || 'Unknown error'}` 
-                }, { status: 400 });
+                const errorText = await imgbbResponse.text();
+                console.error('ImgBB upload failed:', imgbbResponse.status, errorText);
             }
-        } else {
-            return Response.json({ 
-                error: 'Unexpected response format from ClickSend' 
-            }, { status: 500 });
+        } catch (error) {
+            console.error('ImgBB upload error:', error);
         }
-
-    } catch (error) {
-        console.error('API error:', error);
-        return Response.json({ 
-            error: error.message || 'Failed to process request' 
-        }, { status: 500 });
     }
+/*
+    const messageData = {
+      from: process.env.TELYNXNUMBER,
+      messaging_profile_id: process.env.PROFILEID,
+      to: phoneNumber,
+      text: smsMessage
+    };
+    
+    // Only add MMS fields if we have a media URL
+    if (mediaUrl) {
+      messageData.type = 'MMS';
+      messageData.media_urls = [mediaUrl];
+    } else {
+      messageData.type = 'SMS';
+    }
+
+    const messageResponse = await client.messages.create(messageData);
+    console.log('Telnyx response:', messageResponse);
+    */
+    return Response.json({ 
+      success: true, 
+      message: 'SMS sent successfully',
+      messageId: messageResponse.data.id,
+      mediaUrl: mediaUrl
+    });
+  
+  } catch (error) {
+    console.error('Telnyx API error:', error);
+    
+    if (error.response) {
+      return Response.json({ 
+        error: `SMS failed: ${error.response.status} - ${error.response.data?.errors?.[0]?.detail || 'Unknown error'}` 
+      }, { status: error.response.status });
+    } else {
+      return Response.json({ 
+        error: 'Failed to send SMS' 
+      }, { status: 500 });
+    }
+  }
 }
