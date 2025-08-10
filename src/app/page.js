@@ -116,7 +116,7 @@ export default function SketchPad() {
 
   const shareDrawingViaSMS = async () => {
     if (!phoneNumber) {
-      alert('Please enter a phone number');
+      alert('Please enter a phone number!');
       return;
     }
 
@@ -186,20 +186,21 @@ export default function SketchPad() {
             />
           </div>
           <div className={styles.controlGroup}>
-            <label>Message:</label>
-            <input
-              type="text"
-              placeholder="Check out my drawing!"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-            <label>From:</label>
-            <input
-              type="text"
-              placeholder="- Anonymous"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+          <input
+            type="text"
+            placeholder="Check out my drawing!"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className={styles.messageInput}
+          />
+          <label>From:</label>
+          <input
+            type="text"
+            placeholder="- Anonymous"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className={styles.nameInput}
+          />
           </div>
           <button onClick={shareDrawingViaSMS} className={styles.sendButton}>
             Send Drawing

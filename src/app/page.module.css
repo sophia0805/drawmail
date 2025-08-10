@@ -95,30 +95,30 @@
   min-width: 50px;
 }
 .undoButton {
-  background: #6c5ce7;
+  background: #FAE1DF;
   color: white;
 }
 .undoButton:hover:not(:disabled) {
-  background: #4318c5;
+  background: #F5B0CB;
   transform: translateY(-2px);
 }
 .undoButton:disabled {
-  background: #b2bec3;
+  background: #9EA3B0;
   color: #636e72;
   cursor: not-allowed;
   transform: none;
 }
 
 .redoButton {
-  background: #00b894;
+  background: #FAE1DF;
   color: white;
 }
 .redoButton:hover:not(:disabled) {
-  background: #00a085;
+  background: #F5B0CB;
   transform: translateY(-2px);
 }
 .redoButton:disabled {
-  background: #b2bec3;
+  background: #9EA3B0;
   color: #636e72;
   cursor: not-allowed;
   transform: none;
@@ -136,22 +136,22 @@
 }
 
 .clearButton {
-  background: #ff6b6b;
+  background: #745C97;
   color: white;
 }
 
 .clearButton:hover {
-  background: #ff5252;
+  background: #C4BBB8;
   transform: translateY(-2px);
 }
 
 .downloadButton {
-  background: #4ecdc4;
+  background: #39375B;
   color: white;
 }
 
 .downloadButton:hover {
-  background: #45b7aa;
+  background: #C4BBB8;
   transform: translateY(-2px);
 }
 
@@ -164,12 +164,12 @@
   transition: all 0.3s ease;
   font-size: 0.9rem;
   width: 100%;
-  background: #00b894;
+  background: #F5B0CB;
   color: white;
 }
 
 .sendButton:hover {
-  background: #00a085;
+  background: #C4BBB8;
   transform: translateY(-2px);
 }
 
@@ -197,47 +197,38 @@
   .sketchPad {
     flex-direction: column;
   }
-
   .sidebar {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid #e0e0e0;
     padding: 15px;
   }
-
   .sidebar h1 {
     font-size: 1.2rem;
   }
-
   .controls {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 15px;
     justify-content: center;
   }
-
   .controlGroup {
     flex-direction: row;
     align-items: center;
     gap: 10px;
   }
-
   .colorPicker {
     width: 50px;
   }
-
   .brushSlider {
     width: 100px;
   }
-
   .buttonGroup {
     order: -1;
   }
-
   .canvasContainer {
     padding: 10px;
   }
-
   .canvas {
     max-width: 100%;
     height: auto;
@@ -260,9 +251,37 @@
     gap: 5px;
   }
 
-  .clearButton,
-  .downloadButton {
+  .clearButton, .downloadButton {
     padding: 10px 20px;
     font-size: 0.8rem;
   }
+}
+
+.phoneInput {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.phoneInput:focus {
+  border-color: #6c5ce7;
+}
+
+.messageInput, .nameInput {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+  margin-bottom: 8px;
+}
+
+.messageInput:focus, .nameInput:focus {
+  border-color: #6c5ce7;
 }
