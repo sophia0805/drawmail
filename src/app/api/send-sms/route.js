@@ -1,12 +1,10 @@
-import telnyx from 'telnyx';
 import FormData from 'form-data';
-
-const client = telnyx("KEY019895E9C363EDB791691EB5A851CBB6_WcjhgRlw4BBRbSpbqt4gPM");
 
 export async function POST(request) {
   try {
     const { phoneNumber, message, imageData } = await request.json();
     let mediaUrl = null;
+    
     if (imageData) {
         try {
             const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
@@ -27,34 +25,50 @@ export async function POST(request) {
             console.error('ImgBB upload error:', error);
         }
     }
+
     const messageData = {
-        from: "+14704028171",
-        messaging_profile_id: "40019895-65b5-45ea-8c44-2e0795f8de09",
-        to: phoneNumber,
+        message_type: "text",
         text: message || 'Check out my drawing!',
-        media_urls: [mediaUrl],
-        type: 'MMS'
+        to: phoneNumber.replace(/^\+/, ''),
+        from: "13234081270",
+        channel: "mms",
+        "image": {
+            "url": mediaUrl,
+            "caption": "Additional text to accompany the image."
+        }
     };
-    const messageResponse = await client.messages.create(messageData);
-    console.log('Telnyx response:', messageResponse);
+
+    const vonageResponse = await fetch('https://api.nexmo.com/v1/messages', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${Buffer.from(`${process.env.VONAGE_API_KEY}:${process.env.VONAGE_API_SECRET}`).toString('base64')}`
+        },
+        body: JSON.stringify(messageData)
+    });
+
+    if (!vonageResponse.ok) {
+        const errorData = await vonageResponse.json();
+        console.error('Vonage API error:', errorData);
+        return Response.json({ 
+            error: `Message failed: ${vonageResponse.status} - ${errorData?.error?.detail || 'Unknown error'}` 
+        }, { status: vonageResponse.status });
+    }
+
+    const vonageResult = await vonageResponse.json();
+    console.log('Vonage response:', vonageResult);
+    
     return Response.json({ 
       success: true, 
-      message: 'MMS sent successfully',
-      messageId: messageResponse.data.id,
+      message: mediaUrl ? 'MMS sent successfully' : 'SMS sent successfully',
+      messageId: vonageResult.message_uuid,
       mediaUrl: mediaUrl
     });
   
   } catch (error) {
-    console.error('Telnyx API error:', error);
-    
-    if (error.response) {
-      return Response.json({ 
-        error: `SMS failed: ${error.response.status} - ${error.response.data?.errors?.[0]?.detail || 'Unknown error'}` 
-      }, { status: error.response.status });
-    } else {
-      return Response.json({ 
-        error: 'Failed to send SMS' 
-      }, { status: 500 });
-    }
+    console.error('Vonage API error:', error);
+    return Response.json({ 
+      error: 'Failed to send message' 
+    }, { status: 500 });
   }
 }
