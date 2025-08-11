@@ -1,37 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+- https://hackatime-badge.hackclub.com/U074B2Y4ANL/desmos-artist | ![](https://hackatime-badge.hackclub.com/U074B2Y4ANL/desmos-artist)  
+i swear i'm gonna stop renaming my folders accidentally now
 
-## Getting Started
+# drawmail  | [![Athena Award Badge](https://img.shields.io/endpoint?url=https%3A%2F%2Faward.athena.hackclub.com%2Fapi%2Fbadge)](https://award.athena.hackclub.com?utm_source=readme)
 
-First, run the development server:
+send your beautiful drawing to any phone number of your choice, along with a customized message or just download and keep it for yourself!
+> inspired by a desire to prank my friends with fun drawings
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## features
+- sketchpad where you can draw with any color and any size brush
+- phone number and message inputs
+- sms/mms api to send the images/msgs
+- download feature to save your precious images
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## usage
+1. draw a fun picture
+2. type in a phone number and message
+3. click send or download it for yourself
+4. wait for your friends to see!
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## installation  
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/sophia0805/research-extension
+   cd research-extension
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-## Learn More
+3. **Create a .env**
+    ```.env
+    IMGBBKEY=""
+    VONAGE_API_KEY=""
+    VONAGE_API_SECRET=""
+    VONAGE_FROM_NUMBER=""
+    ```
 
-To learn more about Next.js, take a look at the following resources:
+3. **Run the development server**
+   ```bash
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## history
+- okay so originally i tried to use twilio, which didn't work very well because they could only send to verified numbers and i wanted to prank my friends
+- then, i switched to clicksend, which kept disabling my accounts because i wasn't a business, but also only took png URLs when i had the raw data
+- this lead me to attempt to use hack club cdn's api, which required ngrok, so i set it all up with clicksend and it worked!! unfortunately, i couldn't figure out a way to deploy the ngrok local server with vercel, so i changed the entire idea
+- i gave up with clicksend, switching instead to telynx which had the same issue as twilio, despite having better pricing
+- while attempting to use telynx, i figured out a way to use imgbb as an image uploader instead of cdn, so i could host it on vercel
+- finally, i switched to vonage, which despite a $2 trial limit, works well so far yay
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# sturdy-waffle
+### finished project:
+![](https://hc-cdn.hel1.your-objectstorage.com/s/v3/0065f099a982d3ba51dfb95cebe0de344fe0d4db_image.png) 
