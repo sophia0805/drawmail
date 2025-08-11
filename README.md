@@ -1,37 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+- https://hackatime-badge.hackclub.com/U074B2Y4ANL/desmos-artist | ![](https://hackatime-badge.hackclub.com/U074B2Y4ANL/desmos-artist)
+i swear i'm gonna stop renaming my folders accidentally now
 
-## Getting Started
+# drawmail  | [![Athena Award Badge](https://img.shields.io/endpoint?url=https%3A%2F%2Faward.athena.hackclub.com%2Fapi%2Fbadge)](https://award.athena.hackclub.com?utm_source=readme)
 
-First, run the development server:
+send your beautiful drawing to any phone number of your choice, along with a customized message or just download and keep it for yourself!
+> inspired by a desire to prank my friends with fun drawings
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## features
+- sketchpad where you can draw with any color and any size brush
+- phone number and message inputs
+- 
+- generates summaries for the papers using AI
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## usage
+1. begin writing your research notes in the main text area
+2. the system automatically extracts key research phrases
+3. relevant papers appear in the right side bar
+4. click on a paper or generate a summary!
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## installation  
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/sophia0805/research-extension
+   cd research-extension
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-## Learn More
+3. **Run the development server**
+   ```bash
+   npm run dev
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+4. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## history
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# sturdy-waffle
+### finished project:
+![](https://hc-cdn.hel1.your-objectstorage.com/s/v3/0065f099a982d3ba51dfb95cebe0de344fe0d4db_image.png) 
