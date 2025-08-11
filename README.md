@@ -19,10 +19,11 @@ send your beautiful drawing to any phone number of your choice, along with a cus
 4. wait for your friends to see!
 
 ## installation  
+- there are two versions, this one uses imgbb to upload the image and vonage to send the message, but you can also check out the other one [here](https://github.com/sophia0805/sturdy-waffle/tree/cdn-clicksend)
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/sophia0805/research-extension
-   cd research-extension
+   git clone https://github.com/sophia0805/drawmail
+   cd drawmail
    ```
 
 2. **Install dependencies**
@@ -55,4 +56,4 @@ send your beautiful drawing to any phone number of your choice, along with a cus
 - finally, i switched to vonage, which despite a $2 trial limit, works well so far yay
 
 ### finished project:
-![](https://hc-cdn.hel1.your-objectstorage.com/s/v3/0065f099a982d3ba51dfb95cebe0de344fe0d4db_image.png) 
+![](https://hc-cdn.hel1.your-objectstorage.com/s/v3/327dd817897d301a541fce4386a6839b010f5b69_image.png) 
