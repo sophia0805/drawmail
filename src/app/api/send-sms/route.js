@@ -29,14 +29,13 @@ export async function POST(request) {
     console.log(phoneNumber.replace(/^\+/, ''), message, mediaUrl)
 
     const messageData = {
-        message_type: "text",
-        text: message || 'Check out my drawing!',
+        message_type: "image",
         to: phoneNumber.replace(/^\+/, ''),
         from: "13234081270",
         channel: "mms",
-        "image": {
-            "url": mediaUrl,
-            "caption": "drawing"
+        image: {
+            url: mediaUrl,
+            caption: message || 'Check out my drawing!'
         }
     };
 
