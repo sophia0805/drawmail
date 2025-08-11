@@ -9,26 +9,33 @@ send your beautiful drawing to any phone number of your choice, along with a cus
 ## features
 - sketchpad where you can draw with any color and any size brush
 - phone number and message inputs
-- 
-- generates summaries for the papers using AI
+- sms/mms api to send the images/msgs
+- download feature to save your precious images
 
 ## usage
-1. begin writing your research notes in the main text area
-2. the system automatically extracts key research phrases
-3. relevant papers appear in the right side bar
-4. click on a paper or generate a summary!
+1. draw a fun picture
+2. type in a phone number and message
+3. click send or download it for yourself
+4. wait for your friends to see!
 
 ## installation  
+- there are two versions, this one uses hack club's cdn to upload the image and clicksend to send the message, but you can also check out the other one [here](https://github.com/sophia0805/sturdy-waffle/tree/main)
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/sophia0805/research-extension
-   cd research-extension
+   git clone https://github.com/sophia0805/drawmail
+   cd drawmail
    ```
 
 2. **Install dependencies**
    ```bash
    npm install
    ```
+
+3. **Create a .env**
+    ```.env
+    CLICKSEND_USERNAME=""
+    CLICKSEND_API_KEY=""
+    ```
 
 3. **Run the development server**
    ```bash
@@ -39,7 +46,12 @@ send your beautiful drawing to any phone number of your choice, along with a cus
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## history
-
+- okay so originally i tried to use twilio, which didn't work very well because they could only send to verified numbers and i wanted to prank my friends
+- then, i switched to clicksend, which kept disabling my accounts because i wasn't a business, but also only took png URLs when i had the raw data
+- this lead me to attempt to use hack club cdn's api, which required ngrok, so i set it all up with clicksend and it worked!! unfortunately, i couldn't figure out a way to deploy the ngrok local server with vercel, so i changed the entire idea
+- i gave up with clicksend, switching instead to telynx which had the same issue as twilio, despite having better pricing
+- while attempting to use telynx, i figured out a way to use imgbb as an image uploader instead of cdn, so i could host it on vercel
+- finally, i switched to vonage, which despite a $2 trial limit, works well so far yay
 
 ### finished project:
-![](https://hc-cdn.hel1.your-objectstorage.com/s/v3/0065f099a982d3ba51dfb95cebe0de344fe0d4db_image.png) 
+![](https://hc-cdn.hel1.your-objectstorage.com/s/v3/327dd817897d301a541fce4386a6839b010f5b69_image.png) 
